@@ -1,18 +1,33 @@
 from datetime import datetime, timedelta
 from flask import Flask, jsonify, request, session
 from flask_cors import CORS
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 from werkzeug.security import generate_password_hash, check_password_hash
 import logging
 
 app = Flask(__name__)
 CORS(app)
 app.secret_key = 'medicine-inventory'
-client = MongoClient('mongodb://localhost:27017')
+
+# MongoDB Atlas connection
+uri = "mongodb+srv://abdaditya10github:vrWls3ksMWhy5Csl@medicine-stock.fa4ulu1.mongodb.net/?retryWrites=true&w=majority&appName=Medicine-Stock"
+
+# Create a new client and connect to the server
+client = MongoClient(uri, server_api=ServerApi('1'))
+
+# Send a ping to confirm a successful connection
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
+
+# Define the database and collections
 db = client['medicine_inventory']
 users = db['users']
-
 users.create_index('username', unique=True)
+
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -40,7 +55,7 @@ def register():
     }
     users.insert_one(user)
 
-    return jsonify({"message": "User registers successfully"}), 201
+    return jsonify({"message": "User registered successfully"}), 201
 
 
 @app.route('/login', methods=['POST'])
